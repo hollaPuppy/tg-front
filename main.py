@@ -1,5 +1,4 @@
 import random
-import emoji
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -7,26 +6,34 @@ from aiogram.dispatcher import FSMContext
 from settings import CONFIG_TOKEN, HOST_NAME
 import httpx
 import logging
-
+import markups
 
 bot = Bot(token=CONFIG_TOKEN)
-
 dp = Dispatcher(bot, storage=MemoryStorage())
-
-logging.basicConfig(level=logging.INFO)
+channel_id_1 = "@watchin_movies"
+# logging.basicConfig(level=logging.INFO) - в текущей ситуации - мусор, продумать логирование в бд
 
 
 @dp.message_handler(commands="start")
 async def cmd_test1(message: types.Message):
-    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    buttons = ["Найти фильм", "Инструкция", "Случайный фильм"]
-    keyboard.add(*buttons)
-    await message.answer("Привет! Нажми нужную кнопку", reply_markup=keyboard)
+    if sub_chanels_check(await bot.get_chat_member(chat_id=channel_id_1, user_id=message.from_user.id)):
+        await message.answer("Привет! Нажми нужную кнопку", reply_markup=markups.keyboardStart)
+    else:
+        await message.answer("Для того, чтобы использовать бот, нужно подписаться на канал!", reply_markup=markups.checkSubMenu)
+
+
+@dp.callback_query_handler(text="subDone")
+async def subChanelDone(message: types.Message):
+    await bot.delete_message(message.from_user.id, message.message.message_id)
+    if sub_chanels_check(await bot.get_chat_member(chat_id=channel_id_1, user_id=message.from_user.id)):
+        await message.answer("Привет! Нажми нужную кнопку", reply_markup=markups.keyboardStart)
+    else:
+        await message.answer("Для того, чтобы использовать бот, нужно подписаться на канал!", reply_markup=markups.checkSubMenu)
 
 
 @dp.message_handler(lambda message: message.text == "Инструкция")
 async def cmd_test1(message: types.Message):
-    await message.answer("Привет! Я - умный бот, предназначенный для поиска фильма на вечер! \nНайти фильм - "
+    await message.answer("Привет! Я - умный бот, предназначенный для поиска фильма на вечер! \n Найти фильм - "
                          "дописать. \nСлучайный фильм - дописать")
 
 
@@ -75,9 +82,16 @@ def parse_answer_film_info(film_info):
         film_name = f"{each['film_name']}"
         film_desc = f"{each['film_desc']}"
         film_link = f"{each['film_link']}"
-    film_info_ok = 'Название фильма:' + film_name + emoji.emojize(
-        ' :thumbs_up:') + '\n\n' + 'Описание фильма:' + film_desc + '\n\n' + 'Ссылка на фильм в хорошем качестве:' + film_link
+    film_info_ok = 'Название фильма:' + film_name + '\n\n' + 'Описание фильма:' + film_desc + '\n\n' + 'Ссылка на фильм в хорошем качестве:' + film_link
     return film_info_ok
+
+
+def sub_chanels_check(chat_member):
+    print(chat_member['status'])
+    if chat_member['status'] != 'left':
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":
