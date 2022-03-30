@@ -24,7 +24,7 @@ async def cmd_test1(message: types.Message):
 
 @dp.callback_query_handler(text="subDone")
 async def subChanelDone(message: types.Message):
-    await bot.delete_message(message.from_user.id, message.message.message_id)
+    # await bot.delete_message(message.from_user.id, message.message.message_id)
     if sub_chanels_check(await bot.get_chat_member(chat_id=channel_id_1, user_id=message.from_user.id)):
         await message.answer("Привет! Нажми нужную кнопку", reply_markup=markups.keyboardStart)
     else:
@@ -39,7 +39,7 @@ async def cmd_test1(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == "Найти фильм")
 async def cmd_film(message: types.Message):
-    await message.answer("Вводи номер фильма дура")
+    await message.answer("Введите номер фильма")
     await Mydialog.otvet.set()
 
 
@@ -54,7 +54,7 @@ async def cmd_film(message: types.Message):
             film_info_ok = parse_answer_film_info(film_info)
             await message.answer(film_info_ok)
     except BaseException:
-        await message.answer("вышел из ренжа лол")
+        await message.answer("Что-то пошло не так... Попробуйте еще раз")
 
 
 class Mydialog(StatesGroup):
