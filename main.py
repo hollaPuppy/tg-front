@@ -16,8 +16,14 @@ channel_id_1 = "@watchin_movies"
 
 @dp.message_handler(commands="start")
 async def cmd_test1(message: types.Message):
-    if sub_chanels_check(await bot.get_chat_member(chat_id=channel_id_1, user_id=message.from_user.id)):
+    uid = message.from_user.id
+    if sub_chanels_check(await bot.get_chat_member(chat_id=channel_id_1, user_id=uid)):
         await message.answer("Привет! Нажми нужную кнопку", reply_markup=markups.keyboardStart)
+        async with httpx.AsyncClient() as client:
+            user = await bot.get_chat_member(message.chat.id, uid)
+            username = dict(user).get('user').get('username')
+            user_info = {"username": username}
+            user_reg = await client.post(f'{HOST_NAME}/reg', json=user_info).json()
     else:
         await message.answer("Для того, чтобы использовать бот, нужно подписаться на канал!", reply_markup=markups.checkSubMenu)
 
